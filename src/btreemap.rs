@@ -765,9 +765,8 @@ where
         }
 
         let root = self.load_node(self.root_addr);
-        self.remove_rightmost(root).map(|(k, v)| {
-            (k, V::from_bytes(Cow::Owned(v)))
-        })
+        self.remove_rightmost(root)
+            .map(|(k, v)| (k, V::from_bytes(Cow::Owned(v))))
     }
 
     /// Removes and returns the first element in the map. The key of this element is the minimum key that was in the map
@@ -777,9 +776,8 @@ where
         }
 
         let root = self.load_node(self.root_addr);
-        self.remove_leftmost(root).map(|(k, v)| {
-            (k, V::from_bytes(Cow::Owned(v)))
-        })
+        self.remove_leftmost(root)
+            .map(|(k, v)| (k, V::from_bytes(Cow::Owned(v))))
     }
 
     /// A helper method for recursively removing a key from the B-tree.
@@ -1179,13 +1177,9 @@ where
 
                 if left_sibling.can_remove_entry_without_merging() {
                     // Rotate right: left_sibling -> parent -> child
-                    let (left_key, left_value) =
-                        left_sibling.pop_entry(self.memory()).unwrap();
-                    let (parent_key, parent_value) = node.swap_entry(
-                        last_idx - 1,
-                        (left_key, left_value),
-                        self.memory(),
-                    );
+                    let (left_key, left_value) = left_sibling.pop_entry(self.memory()).unwrap();
+                    let (parent_key, parent_value) =
+                        node.swap_entry(last_idx - 1, (left_key, left_value), self.memory());
                     child.insert_entry(0, (parent_key, parent_value));
 
                     if let Some(last_child) = left_sibling.pop_child() {
@@ -1253,13 +1247,8 @@ where
 
                 if right_sibling.can_remove_entry_without_merging() {
                     // Rotate left: right_sibling -> parent -> child
-                    let (right_key, right_value) =
-                        right_sibling.remove_entry(0, self.memory());
-                    let parent_entry = node.swap_entry(
-                        0,
-                        (right_key, right_value),
-                        self.memory(),
-                    );
+                    let (right_key, right_value) = right_sibling.remove_entry(0, self.memory());
+                    let parent_entry = node.swap_entry(0, (right_key, right_value), self.memory());
                     child.push_entry(parent_entry);
 
                     if right_sibling.node_type() == NodeType::Internal {
@@ -1273,11 +1262,7 @@ where
                 }
 
                 // Both at minimum: merge child into right sibling.
-                let merged = self.merge(
-                    child,
-                    right_sibling,
-                    node.remove_entry(0, self.memory()),
-                );
+                let merged = self.merge(child, right_sibling, node.remove_entry(0, self.memory()));
                 node.remove_child(0);
 
                 if node.entries_len() == 0 {
